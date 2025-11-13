@@ -1,68 +1,32 @@
-// import express from "express";
-// import cors from "cors";
-// import dotenv from "dotenv";
-// import { connectDb } from "./config/Db.js";
-// import userRouter from "./Routers/UserRoute.js";
-// import { errorHandler } from "./middleware/Error.js";
-// import path from "path";
-
-// dotenv.config();
-// const __dirname = path.resolve();
-// const app = express();
-// app.use(cors(process.env.ALLOWED_ORIGINS));
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// // connect DB
-// connectDb();
-
-// // Other routes
-// app.use("/api/users", userRouter);
-
-// // error handler
-// app.use(errorHandler);
-
-// // home route
-// app.get("/", (req, res) => {
-//   res.send("Hello World!");
-// });
-
-// // Main route
-// if (process.env.NODE_ENV === "production") {
-//   app.use(express.static("client/build"));
-//   app.get("*", (req, res) => {
-//     res.sendFile(path.resolve(__dirname, "client", "build", "index.html"));
-//   });
-// }
-
-// const PORT = process.env.PORT || 5000;
-// // listen
-// app.listen(PORT, () => {
-//   console.log(`Server is running in http://localhost:${PORT}`);
-// });
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import { connectDb } from "./config/Db.js";
 import userRouter from "./Routers/UserRoute.js";
 import { errorHandler } from "./middleware/Error.js";
-import path from "path";
 
+// ✅ Load environment variables
 dotenv.config();
+
+// ✅ Set up Express app
 const __dirname = path.resolve();
 const app = express();
 
-// ✅ Fix: Configure CORS properly
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+// ✅ Properly configure allowed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl)
+      // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       } else {
+        console.warn(`❌ Blocked by CORS: ${origin}`);
         return callback(new Error("Not allowed by CORS"));
       }
     },
@@ -70,24 +34,25 @@ app.use(
   })
 );
 
+// ✅ Parse incoming JSON and URL data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect DB
+// ✅ Connect to MongoDB
 connectDb();
 
-// Routes
+// ✅ API Routes
 app.use("/api/users", userRouter);
 
-// Error handler
+// ✅ Error handler
 app.use(errorHandler);
 
-// Home route
+// ✅ Simple home route
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("🚀 RecoverCart backend is running successfully!");
 });
 
-// Production setup
+// ✅ Serve frontend (optional, for production)
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
   app.get("*", (req, res) => {
@@ -95,6 +60,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
